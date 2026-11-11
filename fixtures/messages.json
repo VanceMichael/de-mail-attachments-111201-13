@@ -1,0 +1,42 @@
+{
+  "limits": {
+    "depth": 3,
+    "members": 20,
+    "expanded_bytes": 4096,
+    "file_bytes": 1024
+  },
+  "messages": [
+    {
+      "message_id": "same-id",
+      "filename": "资料.zip",
+      "members": [
+        {
+          "name": "a.csv",
+          "content": "id,value\n1,20\n"
+        },
+        {
+          "name": "../outside.csv",
+          "content": "拒绝写出"
+        }
+      ]
+    },
+    {
+      "message_id": "forward-id",
+      "forward_of": "same-id"
+    },
+    {
+      "message_id": "bad-part",
+      "encoding": "invalid-base64"
+    },
+    {
+      "message_id": "symlink",
+      "members": [
+        {
+          "name": "link",
+          "type": "symlink",
+          "target": "../escape"
+        }
+      ]
+    }
+  ]
+}
