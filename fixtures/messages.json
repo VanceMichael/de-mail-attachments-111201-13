@@ -8,25 +8,33 @@
   "messages": [
     {
       "message_id": "same-id",
-      "filename": "资料.zip",
+      "subject": "首封含越界成员的压缩包",
       "members": [
         {
-          "name": "a.csv",
-          "content": "id,value\n1,20\n"
-        },
-        {
-          "name": "../outside.csv",
-          "content": "拒绝写出"
+          "name": "资料.zip",
+          "type": "zip",
+          "members": [
+            {
+              "name": "a.csv",
+              "content": "id,value\n1,20\n"
+            },
+            {
+              "name": "../outside.csv",
+              "content": "拒绝写出"
+            }
+          ]
         }
       ]
     },
     {
       "message_id": "forward-id",
-      "forward_of": "same-id"
+      "forward_of": "same-id",
+      "subject": "转发首封（无附件，仅来源声明）"
     },
     {
       "message_id": "bad-part",
-      "encoding": "invalid-base64"
+      "subject": "含无法解码部件的邮件",
+      "raw": "Message-ID: <bad-part@mail.example.invalid>\r\nFrom: supplier@example.invalid\r\nTo: archive@archive.example.invalid\r\nSubject: broken part\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"b\"\r\n\r\n--b\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nbody\r\n--b\r\nContent-Type: text/csv; name=\"broken.csv\"\r\nContent-Disposition: attachment; filename=\"broken.csv\"\r\nContent-Transfer-Encoding: x-unknown-encoding\r\n\r\nid,value\r\n1,2\r\n--b--\r\n"
     },
     {
       "message_id": "symlink",
@@ -37,6 +45,173 @@
           "target": "../escape"
         }
       ]
+    },
+    {
+      "message_id": "encoded-names",
+      "subject": "编码文件名与同名附件",
+      "members": [
+        {
+          "name": "深度资料.csv",
+          "type": "file",
+          "encoded_filename": true,
+          "content": "id,value\n100,55\n"
+        },
+        {
+          "name": "深度资料.csv",
+          "type": "file",
+          "encoded_filename": true,
+          "cid": "second-copy",
+          "content": "id,value\n101,66\n"
+        }
+      ]
+    },
+    {
+      "message_id": "nested-zip",
+      "subject": "ZIP 套 ZIP 与可信清单",
+      "members": [
+        {
+          "name": "外层.zip",
+          "type": "zip",
+          "members": [
+            {
+              "name": "内层.zip",
+              "type": "zip",
+              "members": [
+                {
+                  "name": "station3.csv",
+                  "content": "id,station,depth\n3,S3,210\n"
+                }
+              ]
+            },
+            {
+              "name": "station4.csv",
+              "content": "id,station,depth\n4,S4,220\n"
+            }
+          ]
+        }
+      ],
+      "manifest": {
+        "files": [
+          {
+            "name": "station3.csv",
+            "rows": 1
+          },
+          {
+            "name": "station4.csv",
+            "rows": 1
+          }
+        ]
+      }
+    },
+    {
+      "message_id": "encrypted-zip",
+      "subject": "不支持的加密压缩包",
+      "members": [
+        {
+          "name": "secret.zip",
+          "type": "zip",
+          "encrypted": true,
+          "members": [
+            {
+              "name": "hidden.csv",
+              "content": "id,value\n9,9\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "message_id": "oversize-file",
+      "subject": "单文件超过 1024 字节上限",
+      "members": [
+        {
+          "name": "批次.zip",
+          "type": "zip",
+          "members": [
+            {
+              "name": "big.csv",
+              "content": "id,value\n"
+            },
+            {
+              "name": "toolarge.csv",
+              "content": "id,value\n0,REPLACE_ME\n",
+              "oversize_to": 1100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "message_id": "partial-msg",
+      "subject": "分段传输编码的完整邮件",
+      "partial": {
+        "total": 3
+      },
+      "members": [
+        {
+          "name": "partial-data.csv",
+          "content": "id,value\n7,77\n"
+        }
+      ]
+    },
+    {
+      "message_id": "correction-v1",
+      "subject": "首版监测数据",
+      "members": [
+        {
+          "name": "reading.csv",
+          "content": "id,station,value\n20,S1,100\n"
+        }
+      ]
+    },
+    {
+      "message_id": "correction-v2",
+      "subject": "更正：监测数据修订",
+      "supersedes": "correction-v1",
+      "members": [
+        {
+          "name": "reading.csv",
+          "content": "id,station,value\n20,S1,108\n"
+        }
+      ]
+    },
+    {
+      "message_id": "forward-copy",
+      "subject": "转发同载荷邮件（不得翻倍）",
+      "forward_of": "correction-v2",
+      "members": [
+        {
+          "name": "reading.csv",
+          "content": "id,station,value\n20,S1,108\n"
+        }
+      ]
+    },
+    {
+      "message_id": "truncated-mime",
+      "subject": "损坏邮件",
+      "raw": "From: supplier@example.invalid\r\nContent-Type: multipart/mixed; boundary=\"b\"\r\n\r\n--b\r\nContent-Type: text/csv\r\nContent-Transfer-Encoding: base64\r\n\r\naWQsdmFsdWU"
+    },
+    {
+      "message_id": "manifest-missing",
+      "subject": "清单声明的文件未到齐",
+      "members": [
+        {
+          "name": "only-one.csv",
+          "content": "id,value\n5,50\n"
+        }
+      ],
+      "manifest": {
+        "files": [
+          {
+            "name": "only-one.csv",
+            "rows": 1
+          },
+          {
+            "name": "missing-two.csv",
+            "rows": 1
+          }
+        ]
+      }
     }
   ]
 }
